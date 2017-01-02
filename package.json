@@ -1,0 +1,41 @@
+{
+  "name": "sock",
+  "version": "0.0.0",
+  "description": "Node websocket server and client for mini-games and chat",
+  "main": "src/server/app.js",
+  "scripts": {
+    "start-chat-server": "node sample/chat/server/app.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "node builder.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Namide/sock.git"
+  },
+  "keywords": [
+    "node",
+    "server",
+    "client",
+    "websocket",
+    "chat",
+    "game",
+    "es6",
+    "javascript"
+  ],
+  "author": "Damien Doussaud (namide.com)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Namide/sock/issues"
+  },
+  "homepage": "https://github.com/Namide/sock#readme",
+  "devDependencies": {
+    "babel-preset-es2015": "^6.18.0",
+    "babelify": "^7.3.0",
+    "browserify": "^13.1.1",
+    "uglifyify": "^3.0.4"
+  },
+  "dependencies": {
+    "import-export": "^1.0.1",
+    "ws": "^1.1.1"
+  }
+}

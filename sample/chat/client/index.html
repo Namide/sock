@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<!--
+The MIT License
+
+Copyright 2017 Damien Doussaud (namide.com).
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+-->
+<html>
+    <head>
+        <title>Chat</title>
+        <meta charset="utf-8">
+        <link rel="stylesheet" type="text/css" href="chat.css">
+    </head>
+    <body>
+        <div class="content">
+
+            <!-- CHAN LIST -->
+            <div class="chans open">
+
+                <form action="">
+                    <input id="chan" type="text" pattern="^[_A-Za-z0-9-]{3,10}$" maxlength="10" required placeholder="Create new chan" autocomplete="off">
+                </form>
+                <h2>Channels</h2>
+                <ul class="list"></ul>
+
+            </div>
+
+            <!-- MESSAGES -->
+            <div class="chat">
+
+                <h1>&nbsp</h1>
+
+                <div class="arrows">
+                    <a class="open left-arrow"></a>
+                    <a class="open right-arrow"></a>				
+                </div>
+
+                <div class="out"></div>
+                <div class="in">
+                    <form action="">
+                        <input id="msg" type="text" required autofocus placeholder="Message" autocomplete="off">
+                    </form>
+                </div>
+            </div>
+
+            <!-- USER LIST -->
+            <div class="users open">
+
+                <form action="">
+                    <input id="name" type="text" pattern="^[_A-Za-z0-9-]{3,10}$" maxlength="10" required placeholder="Your name" autocomplete="off">
+                </form>
+
+                <h2>Users in channel</h2>
+                <ul class="list"></ul>
+
+                <h2></h2>
+                <em class="num"></em>
+
+            </div>
+
+        </div>
+
+
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+        <script type="text/javascript" src="MpgClient.js"></script>
+        <script language="javascript" type="text/javascript">
+
+            var LANG = MpgTrad.GetLang(["en", "fr"])
+            function tl(en, fr) {
+                return (LANG === "fr") ? fr : en;
+            }
+            $(".content>.chans>h2").html(tl("Channels", "Salons"));
+            $("#chan").attr("placeholder", tl("Create new Channel", "Crée un nouveau salon"));
+            $("#name").attr("placeholder", tl("Change your name", "Change ton nom"));
+            $("#chan").attr("title", tl("You can only use alphanumeric, hyphen and underscore between 3 and 10 characters.", "vous ne pouvez utiliser que des caractères latin standarts (minuscules, majuscules), des chiffres, des tirets et des underscores entre 3 et 10 caractères."));
+            $("#name").attr("title", tl("You can only use alphanumeric, hyphen and underscore between 3 and 10 characters.", "vous ne pouvez utiliser que des caractères latin standarts (minuscules, majuscules), des chiffres, des tirets et des underscores entre 3 et 10 caractères."));
+            $(".users>h2:first").html(tl("Users in channel", "Utilisateurs dans le salon"));
+
+            // Convert a string to an hexadecimal color (RGB)
+            function strToColor(str) {
+
+                var r = 0, g = 0, b = 0, f, l = str.length, n = 0;
+                for (var i = 0; i < str.length; i++)
+                    n += str.charCodeAt(i) * Math.E * i;
+                n = Math.floor(0xFFFFFF * (Math.sin(n) * 0.5 + 0.5));
+
+                r = ((n >> 16) & 0xFF) / 0xFF;
+                g = ((n >> 8) & 0xFF) / 0xFF;
+                b = (n & 0xFF) / 0xFF;
+
+                // Add saturation
+                f = function (str) {
+                    return str + String.fromCharCode(str.charCodeAt(Math.round(str.length * 0.5)) + 1);
+                };
+                var dMax = Math.max(Math.max(Math.abs(r - g), Math.abs(r - b)), Math.abs(g - b));
+                if (dMax < 0.8) {
+                    return strToColor(f(str));
+                }
+
+                f = function (c) {
+                    return Math.round(c * 0xFF) & 0xFF;
+                };
+                var c = (f(r) << 16 | f(g) << 8 | f(b)).toString(16);
+                while (c.length < 6)
+                    c = "0" + c;
+                return c;
+            }
+
+
+            // DOM dependant functions
+            $(function () {
+
+                var output = $(".chat .out");
+
+                // Add wink for new messages
+                window.mpgcFocus = true;
+                $(window).focus(function () {
+
+                    window.mpgcFocus = true;
+                    document.title = "Tchat";
+
+                }).blur(function () {
+
+                    window.mpgcFocus = false;
+
+                });
+
+                // add click funtion to join chan by a tag
+                function addClickToChan(tag, chanName) {
+                    tag.click(function () {
+                        mpgc.joinChan(chanName);
+                        return false;
+                    });
+                }
+
+                // add click funtion to kick a user
+                function addClickKickUser(tag, user) {
+                    tag.click(function () {
+                        mpgc.kickUser(user);
+                        return false;
+                    });
+                }
+                // add click funtion to up to moderator a user
+                function addClickUpUser(tag, user) {
+                    tag.click(function () {
+                        mpgc.upToModerator(user);
+                        return false;
+                    });
+                }
+                // DISPLAY CHANS
+                function displayChans(list) {
+
+                    list.sort();
+                    var ul = $(".chans .list");
+                    ul.html("");
+                    for (var i = 0; i < list.length; i++) {
+                        var li = $("<li>");
+                        addClickToChan(li, list[i]);
+                        li.html(list[i]);
+                        if (this.chan.data.name == list[i])
+                            li.addClass("selected");
+
+                        ul.append(li);
+                    }
+                }
+
+                // DISPLAY USERS
+                function displayUsers(users, mpgc) {
+
+                    users.sort(function (a, b) {
+                        var a = (a.isAdmin() || a.isModerator()) ? ("@" + a.data.name) : a.data.name;
+                        var b = (b.isAdmin() || b.isModerator()) ? ("@" + b.data.name) : b.data.name;
+                        return a > b;
+                    });
+                    var list = $(".users .list");
+                    list.html("");
+                    for (var i = 0; i < users.length; i++) {
+                        var name = users[i].data.name;
+                        var li = $("<li>")
+                        if (mpgc.me == users[i])
+                            li.addClass("selected");
+                        li.css("color", "#" + strToColor(name));
+                        if (users[i].isAdmin() || users[i].isModerator()) {
+                            li.html("@" + name);
+                        } else {
+                            li.html(name);
+                        }
+                        if (users[i] !== mpgc.me && (mpgc.me.isAdmin() || mpgc.me.isModerator())) {
+                            if (!users[i].isAdmin() && !users[i].isModerator()) {
+
+                                var up = $("<a>");
+                                up.html(tl("up", "S"));
+                                up.addClass("up");
+                                addClickUpUser(up, users[i]);
+                                li.append(up);
+                            }
+
+                            var kick = $("<a>");
+                            kick.html(tl("kick", "X"));
+                            kick.addClass("kick");
+                            addClickKickUser(kick, users[i]);
+                            li.prepend(kick);
+                        }
+                        list.append(li);
+                    }
+                    $(".users .num").html(users.length + tl(" people", " personne" + ((users.length > 1) ? "s" : "")));
+                }
+
+                // DISPLAY MESSAGE
+                function addMsg(msg) {
+
+                    var p = $("<p>");
+                    p.css("wordWrap", "break-word");
+                    p.html(msg);
+                    output.append(p);
+                    output.scrollTop(output.height());
+                }
+
+                // INIT SOCKET CLIENT
+                var mpgc = new MpgClient("ws://localhost:8000/chat", function () {
+
+                    // DISPLAY CHAN LIST
+                    this.getChans(displayChans);
+
+                    // DISPLAY CHAN NAME
+                    this.onChanChange = function () {
+
+                        $(".chat h1").html(mpgc.chan.data.name);
+                        output.html("");
+                    };
+
+                    // DISPLAY CHAN TEXT
+                    this.onLog = function (msg) {
+                        addMsg("<em>" + msg + "</em>");
+                    };
+                    // DISPLAY CHAN USER LIST
+                    this.onChanUserList = function (list) {
+                        displayUsers(list, this);
+                    };
+                    // WRITE MESSAGE ON CHAN
+                    this.onChanMsg = function (name, msg) {
+                        addMsg("<strong class='msg-name' style='color: #" + strToColor(name) + ";'>" + name + "</strong>: <span class='msg-body" + ((name === this.me.data.name) ? "  msg-me" : "") + "'>" + msg + "</span>");
+
+                        if (!window.mpgcFocus)
+                            document.title = "Tchat ☻ (" + tl("new message", "nouveau message") + ")";
+                    };
+
+                    // WRITE SERVER MESSAGE ON CHAN
+                    this.onServerMsg = function (msg) {
+                        addMsg("<em class='msg-server'>" + msg + "</em>");
+                    };
+
+                    // RELOAD USER LIST
+                    this.onUserDataChange = function () {
+
+                        displayUsers(this.getChanUserList(), this);
+                    };
+
+                }, function (msg) {
+                    // WRITE ERROR MESSAGE ON CHAN
+                    addMsg("<em class='msg-error'>" + msg + "</em>");
+                });
+
+                // CHANGE NAME
+                $(".users").submit(function (e) {
+                    e.preventDefault();
+                    mpgc.changeUserName($("#name").val(), function () {
+
+                        $("#name").attr("placeholder", mpgc.me.data.name);
+                        $("#name").val("");
+                    });
+                    return false;
+                });
+
+
+                // CREATE AND JOIN NEW CHAN
+                $(".chans").submit(function (e) {
+                    e.preventDefault();
+                    var chan = $("#chan");
+                    mpgc.joinChan(chan.val(), "", displayChans);
+                    chan.val("");
+                    return false;
+                });
+
+                // SEND CHAN TEXT
+                $(".chat .in").submit(function (e) {
+                    e.preventDefault();
+                    var msgForm = $("#msg");
+                    mpgc.sendMsg(msgForm.val());
+                    msgForm.val("");
+                    return false;
+                });
+
+                // OPEN CLOSE CHANS PANNELS
+                $(".chat .arrows .left-arrow").click(function () {
+                    var a = $(".chat .arrows .left-arrow");
+                    var d = $(".chans");
+                    if (a.hasClass("open")) {
+                        a.removeClass("open");
+                        a.addClass("close");
+                        d.removeClass("open");
+                        mpgc.stopListenChans();
+                    } else {
+                        a.removeClass("close");
+                        a.addClass("open");
+                        d.addClass("open");
+                        mpgc.getChans(displayChans);
+                    }
+                });
+
+                // OPEN CLOSE USERS PANNELS
+                $(".chat .arrows .right-arrow").click(function () {
+                    var a = $(".chat .arrows .right-arrow");
+                    var d = $(".users");
+                    if (a.hasClass("open")) {
+                        a.removeClass("open");
+                        a.addClass("close");
+                        d.removeClass("open");
+                    } else {
+                        a.removeClass("close");
+                        a.addClass("open");
+                        d.addClass("open");
+                    }
+                });
+            });
+
+        </script>
+    </body>
+</html>
