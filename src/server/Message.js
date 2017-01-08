@@ -22,11 +22,23 @@
  * THE SOFTWARE.
  */
 
+const CONTENT_TYPE = {
+    EVENT: 1, 
+    DATA: 2, 
+    LIST: 3 
+}
+
+const ITEM_TYPE = {
+    USER: 1, 
+    CHAN: 2, 
+    SERVER: 3 
+}
+
 class Message {
     
     constructor()
     {
-        this.onLog = null
+        // this.onLog = null
     }
     
     sendError( errorId, data, ...to )
@@ -49,34 +61,35 @@ class Message {
         this._send(msg, ...to)
     }
     
-    sendUserData( from, data, ...to )
+    /**
+     * 
+     * @param {Chan|User} item
+     * @param {Object} data
+     * @param {User[]} to
+     */
+    sendData( item, data, ...to )
     {
         const msg = {
-            i: 2,
-            f: 1,
+            i: 2,   // 2 = data
+            f: item.type,
             m: Object.assign( {id: from.data.id}, data )
         }
         
         this._send(msg, ...to)
     }
     
-    sendChanData( chan, data, ...user )
+    /**
+     * 
+     * @param {integer} itemType
+     * @param {Object[]} list
+     * @param {User[]} to
+     */
+    sendList( itemType, list, ...to )
     {
         const msg = {
-            i: 2,
-            f: 2,
-            m: Object.assign( {id: chan.data.id}, data )
-        }
-        
-        this._send(msg, ...user)
-    }
-    
-    sendChanUserList( chan, list, ...to )
-    {
-        const msg = {
-            i: 3,
-            f: 2,
-            m: list.map( user => user.data )
+            i: 3,   // 3 = list
+            f: itemType,
+            m: list
         }
 	
 	this._send(msg, ...to);
@@ -94,4 +107,5 @@ class Message {
     }
 }
 
+export { CONTENT_TYPE, ITEM_TYPE }
 export default Message

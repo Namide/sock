@@ -29,18 +29,13 @@ npm run build
 	
 ```javascript
 {
-    type = i : event = 1 | data = 2 | list = 3,
+    type = y: event = 1 | data = 2 | list = 3,
 
     label = l: String | null,
 
-    from = f: {
-        type: user = 1 | chan = 2 |  server = 3,
-        id: int | null
-    } | null
-
-    to = t: {
-        type: user = 1 | chan = 2 | server = 3,
-        id: int | null
+    target = t: {
+        type = y: user = 1 | chan = 2 | server = 3,
+        id = i: int | null
     } | null
 
     msg = m: *
@@ -53,24 +48,32 @@ server -> client
 
 client -> server
 
-**Subscribe to the channel list and update of the channel list**
+**Subscribe to the channel list and updates of the channel list**
 ```
 {
-    type: list,
-    to: {
-        type: server
-        id: 1
-    }
+    y: 3,    // type: list
+    t: 3     // target (about): server
+    l: 1,    // label: subscribe
 }
 ```
 
-**Unsubscribe to the channel list and update of the channel list**
+**Unsubscribe to the channel list and updates of the channel list**
 ```
 {
-    type: list,
-    to: {
-        type: server
-        id: -1
+    y: 3,    // type: list
+    t: 3,    // target (about): server
+    l: 0,    // label: unsubscribe
+}
+```
+
+**Subscribe to the user list and updates of a chan**
+```
+{
+    y: 3,       // type: list
+    t: 2        // target (about): chan
+    l: 1,       // label: subscribe
+    m: {        // message
+        id: 1   // chan id: 1
     }
 }
 ```

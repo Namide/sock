@@ -25,7 +25,8 @@
 import User from './User.js'
 import Chan from './Chan.js'
 import Connect from './Connect.js'
-import Message from './Message.js'
+import Parser from './Parser.js'
+import Message, {CONTENT_TYPE, ITEM_TYPE} from './Message.js'
 
 const DEFAULT_CONFIG = {
 
@@ -41,7 +42,7 @@ const DEFAULT_CONFIG = {
         public: [{
             name: 'home',
             userMin: 0,
-            userMax: 1000000,
+            userMax: Infinity,
             modEnabled: false
         }],
         default: {
@@ -70,88 +71,188 @@ class Server {
     constructor( config = {} )
     {
         this.users = []
+        this.chans = []
+        this.subscribers = []
+        
         this.cache = {
             userName = {},
             userId = {},
             chanName = {},
-            chanList = {}
+            chanId = {}
         }
         
         this._config = Object.assign({}, DEFAULT_CONFIG, config)
-        this._onDebug = this._getDebugFunction()
+        // this._onDebug = this._getDebugFunction()
         
         const message = new Message()
-        message.onLog = this._onDebug
+        // message.onLog = this._onDebug
         this._message = message
         
         this._initChans()
         
+        this._parser = new Parser()
+        
         const connect = new Connect(this._config.connect)
-        connect.onLog = this._onDebug.bind(this)
+        // connect.onLog = this._onDebug.bind(this)
         connect.onNewUser = this._onNewUser.bind(this)
         connect.start()
         this._connect = connect
         
     }
     
-    joinChan( user, chan = null, pass = '' )
+    // --------------------------------------------------------------
+    //
+    //                          INITIALIZATION
+    //
+    // --------------------------------------------------------------
+    
+    _initChans()
     {
-	const oldChan = user.chan;
-		
-        if (this._joinChan(user, chan, pass))
+        const chanConfigPublic = this._config.chan.public
+        for (let i = 0, l = chanConfigPublic.length; i < l; i++)
         {
-            // Add the new chan to the user who change chan
-            this._message.sendChanData(chan, chan.data, user);
-
-            // Send the chan change to old chan
-            if (oldChan != null)
+            const options = chanConfigPublic[i]
+            
+            // todo create a user for server to replace null
+            this._addChan(null, options.name, options)
+        }
+    }
+    
+    
+    
+    // --------------------------------------------------------------
+    //
+    //                          USER DATAS
+    //
+    // --------------------------------------------------------------
+    
+    _onNewUser( user )
+    {
+        const userConfig = this._config.user.default
+        user.setData( userConfig )
+        user.data.name = userConfig.name + ((User.id > 0) ? (User.id) : '')
+       
+        // this._onDebug('connected', user)
+        
+	// Inform user of his datas
+        this._sendData(user, user.data, user)
+        
+        // Join the default chan
+        this._changeChan(user, this.chans[0], '')
+    }
+    
+    
+    
+    // --------------------------------------------------------------
+    //
+    //                          CHANNEL DATAS
+    //
+    // --------------------------------------------------------------
+    
+    createChan( user, chanName, chanPass = '' )
+    {
+        const options = this._config.chan.default
+        return this._addChan(user, chanName, options, chanPass)
+    }
+    
+    changeChan( user, newChan = null, pass = '' )
+    {
+        if (newChan === null)
+        {
+            return false
+        }
+        
+        if (this._canJoinChan(user, newChan, pass))
+        {   
+            const oldChan = user.chan
+            if (oldChan !== null)
             {
-                this.sendUserData(user, {chan: {id: -2}}, oldChan.users);
+                this._leaveChan(user, oldChan)
             }
-
-            // send to all users in the new chan without the new user
-            var list = [...chan.users]
-            list.splice(list.indexOf(user), 1)
-            this.sendUserData(user, user.data, list);
-
-            // send new data for user
-            this._message.sendChanUserList(chan, chan.users ,user);
-
+            
+            this._joinChan(user, newChan, pass)
             return true
 	}
 	
 	// can't join chan
-        this._message.sendError(user, 406, chan.data.name)
+        this._message.sendError(user, 406, newChan.data.name)
 	return false
     }
     
-    _joinChan( user, chan = null, pass = '' )
+    _getChan(name)
     {
-        if (chan != null && pass !== chan.pass)
+        return this.cache.chanName[name.toLowerCase()] || null
+    }
+    
+    _canJoinChan( user, chan = null, pass = '' )
+    {
+        return (chan !== null && pass === chan.pass && chan.canAdd(user))
+    }
+    
+    _rmChan(chan)
+    {
+        chan.onEmpty = null;
+	chan.onNewMod = null;
+
+        const i = this.chans.indexOf(chan)
+        this.chans.splice(i, 1)
+        
+	delete(this.cache.chanName[chan.data.name.toLowerCase()]);
+	
+	// todo send information to all subscribers
+    }
+    
+    _addChan(user, chanName, options, chanPass = '')
+    {
+        const chanConfig = this._config.chan
+        
+        if (chanConfig.valid.name(chanName))
         {
+            const chan = new Chan(chanPass, options)
+            chan.data.name = chanName
+            chan.onEmpty = this._rmChan.bind(this, chan)
+            chan.onNewMod = (user) => {
+                // inform all the channel that this user is now moderator
+                this._message.sendData(user, {role: user.getRole()}, chan.users)
+            }
             
-            return false
+            this.chans.push(chan)
+            this.cache.chanName[chanName.toLowerCase()] = chan
+            
+            // todo inform subscriber that a new chan is added
+            
+            return chan
         }
-        
-        chan.add(user)
-        return true
-    }
-    
-    _initChans()
-    {
-        const chans = []
-        
-        const chanConfigPublic = this._config.chan.public
-        for (let i = 0, l = chanConfigPublic.length; i < l; i++)
+        else
         {
-            const chan = new Chan( '', chanConfigPublic[i] )
-            chans.push(chan)
+            // Invalid chan name
+            this._message.sendError(user, 404, chanName)
         }
         
-        this.chans = chans
+        return null
     }
     
-    _getDebugFunction()
+    _leaveChan( user, chan )
+    {
+        chan.rm(user)
+        // Send the chan change to old chan
+        this._message.sendData(user, {chan: {id: -2}}, chan.users)
+    }
+    
+    _joinChan( user, chan, pass = '' )
+    {
+        chan.add(user)
+        
+        // Send new chan data to user
+        this._message.sendData(chan, chan.data, user)
+        
+        // send to all users in the chan the new user data
+        this._message.sendData(user, user.data, chan.users)
+    }
+    
+    
+    
+    /*_getDebugFunction()
     {
 	// Active debug mode
 	if (this._config.debug)
@@ -166,22 +267,9 @@ class Server {
             }
 	}
 	return () => {}
-    }
+    }*/
     
-    _onNewUser( user )
-    {
-        const userConfig = this._config.user.default
-        user.setData( userConfig )
-        user.data.name = userConfig.name + ((User.id > 0) ? (User.id) : '')
-       
-        this._onDebug('connected', user)
-        
-	// Inform user of his datas
-        this._sendUserData(user, user.data, user)
-        
-        // Join the default chan
-       this.joinChan(user, this.chans[0], '')
-    }
+    
 }
 
 export default Server

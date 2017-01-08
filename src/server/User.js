@@ -26,6 +26,7 @@ class User {
     
     constructor( socket )
     {
+        this.type = 1
         this.socket = socket
 	this.chan = null
         this.data = { id: ++User.id }

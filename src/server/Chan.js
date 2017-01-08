@@ -32,8 +32,10 @@ class Chan {
      */
     constructor( pass = '', defaultChanData = {} )
     {
+        this.type = 2
         this.pass = pass
-	this.users = [];
+	this.users = []
+        this.subscribers = []   // user list that will be inform of chan changes
 	        
         this.data = Object.assign({ id: ++Chan.id }, defaultChanData)
 	
@@ -48,15 +50,7 @@ class Chan {
      * @public
      */
     add( user )
-    {
-        // Remove user from old channel
-        const oldChan = user.chan;
-	if (oldChan != null)
-        {
-            oldChan.rm(user)
-        }
-        
-        // Add user in this channel
+    {        
         const users = this.users
 	if (users.indexOf(user) < 0)
         {
@@ -86,20 +80,31 @@ class Chan {
     }
     
     /**
+     * Test if the user can be added to this channel
+     * 
+     * @param {User} user
+     * @returns {Boolean}
+     */
+    canAdd( user )
+    {
+        return this.users.length < this.data.userMax
+    }
+    
+    /**
      * Chack if the channel has one moderator (user's role > 0) ; If it's don't
      * have, a new moderator it's added and the data it's dispatched.
      * @private
      */
     _update()
     {
-        if (this.users.length < 1)
+        if (this.users.length < this.data.userMin)
         {
             if (this.onEmpty !== null)
             {
                 this.onEmpty()
             }
 	}
-	else if (!this._hasMod())
+	else if (this.data.modEnabled && !this._hasMod())
         {
             this._addMod()
         }

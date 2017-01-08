@@ -29,7 +29,7 @@ export default class Connect {
     
     constructor( config )
     {
-        this.onLog = null
+        // this.onLog = null
         this.onNewUser = null
         
         this._options = {
@@ -44,11 +44,11 @@ export default class Connect {
         const options = this._options
         const wss = new WebSocketServer(options)
         this._wss = wss
-        this.onLog(`Sock initialized: ${options.host}${options.path}: ${options.port}`)
+        // this.onLog(`Sock initialized: ${options.host}${options.path}: ${options.port}`)
         
         // Listen the new connections
         wss.on('connection', this.add.bind(this))
-        this.onLog(`Sock listen connections`)
+        // this.onLog(`Sock listen connections`)
     }
     
     add( socket )
@@ -63,7 +63,7 @@ export default class Connect {
             }
             catch (error)
             {
-                this.onLog(`Socket closed: ${error}`)
+                // this.onLog(`Socket closed: ${error}`)
                 user.onClose(error);
             }
         }
