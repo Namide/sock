@@ -26,37 +26,35 @@ class Parser {
     
     constructor()
     {
-        this.onServerData = (userEmiter, msg) => {}
-        this.onChanData = (userEmiter, chanTargetId, msg) => {}
-        this.onUserData = (userEmiter, userTargetId, msg) => {}
+        this.onServerData = (msg) => {}
+        this.onChanData = (chanTargetId, msg) => {}
+        this.onUserData = (userTargetId, msg) => {}
         
-        this.onServerSubscribe = (user) => {}
-        this.onServerUnsubscribe = (user) => {}
-        this.onChanSubscribe = (user, chanTargetId) => {}
-        this.onChanUnsubscribe = (user, chanTargetId) => {}
+        this.onServerEvent = (label, msg) => {}
+        this.onChanEvent = (userTargetId, label, msg) => {}
+        this.onUserEvent = (userTargetId, label, msg) => {}
         
-        this.onServerEvent = (userEmiter, label, msg) => {}
-        this.onChanEvent = (userEmiter, chanTargetId, label, msg) => {}
-        this.onUserEvent = (userEmiter, userTargetId, label, msg) => {}
+        this.onServerList = (list) => {}
+        this.onChanList = (list) => {}
         
-        this.onError = (user, errorMsg) => {}
+        this.onError = (code) => {}
     }
     
     /**
      * 
      * @param {User} from
-     * @param {Object} data
+     * @param {String} data
      */
-    check( from, data )
+    check( data )
     {
         try
         {
-            const msg = JSON.parse(data);
-            this._checkMsg( from, msg )
+            const msg = JSON.parse(data)
+            this._checkMsg(msg)
 	}
         catch(e)
         {
-            this.onError(from, `Json error: ${e.message}`)
+            this.onError(2)
         }
     }
     
@@ -76,42 +74,42 @@ class Parser {
         }
         
         return { type, id }
-    }   
+    }
     
-    _dispatchMsg( user, msgType, targetType, targetId, label, msg )
+    _dispatchMsg( msgType, fromType, targetId, label, msg )
     {
-        const code = parseInt(msgType + 10 * targetType)
+        const code = parseInt(msgType + 10 * fromType)
         
         switch( code )
         {
             case 11:    // event for user
             {
-                this.onUserEvent(user, targetId, label, msg)
+                this.onUserEvent(targetId, label, msg)
                 break
             }
             case 12:    // event for chan
             {
-                this.onChanEvent(user, targetId, label, msg)
+                this.onChanEvent(targetId, label, msg)
                 break
             }
             case 13:    // event for server
             {
-                this.onServerEvent(user, label, msg)
+                this.onServerEvent(label, msg)
                 break
             }
             case 21:    // data for user
             {
-                this.onUserData(user, targetId, msg)
+                this.onUserData(targetId, msg)
                 break
             }
             case 22:    // data for chan
             {
-                this.onChanData(user, targetId, msg)
+                this.onChanData(targetId, msg)
                 break
             }
             case 23:    // data for server
             {
-                this.onServerData(user, msg)
+                this.onServerData(msg)
                 break
             }
             /*case 31:    // list for user
@@ -121,64 +119,43 @@ class Parser {
             }*/
             case 32:    // list for chan
             {
-                if (label === 0)
-                {
-                    this.onChanUnsubscribe(user, targetId)
-                }
-                else if (label === 1)
-                {
-                    this.onChanSubscribe(user, targetId)
-                }
-                else
-                {
-                    this.onError(user, `Parser error: for chan list the label: ${label} does'nt exist`)
-                }
-                
+                this.onChanList(msg)
                 break
             }
             case 33:    // list for server
             {
-               if (label === 0)
-                {
-                    this.onServerUnsubscribe(user)
-                }
-                else if (label === 1)
-                {
-                    this.onServerSubscribe(user)
-                }
-                else
-                {
-                    this.onError(user, `Parser error: for chan list the label: ${label} does'nt exist`)
-                }
-                
+                this.onServerList(msg)
                 break
             }
             default:
             {
-                this.onError(user, `Parser error: the combination message type: ${msgType} and target type: ${targetType} does'nt exist`)
+                console.warn(`Parser error: the combination message type: ${msgType} and from type: ${fromType} does'nt exist`)
+                this.onError(2)
             }
         }
     }
     
-    _checkMsg( user, data )
+    _checkMsg( data )
     {
-        const { type: i, label: l, target: t, msg: m } = data
+        const { type: i, from: f, label: l, target: t, msg: m } = data
         
         // Get target type
-        const { targetType: type, targetId: id } = this._getTypeIdByData(target)
+       const { targetType: type, targetId: id } = this._getTypeIdByData(from)
         
         
         if (!Number.isInteger(type) || !Number.isInteger(targetType))
         {
-            this.onError(user, 'Parser error: message must have type and target type')
+            console.warn('Parser error: message must have type and target type')
+            this.onError(2)
         }
         else if (type < 1 || type > 3 || targetType < 1 || targetType > 3)
         {
-            this.onError(user, 'Parser error: message type and target type must be scoped between 0 and 4')
+            console.warn('Parser error: message type and target type must be scoped between 0 and 4')
+            this.onError(2)
         }
         else
         {
-            this._dispatchMsg(user, type, targetType, targetId, label, msg)
+            this._dispatchMsg(type, targetType, targetId, label, msg)
         }
     }
 }

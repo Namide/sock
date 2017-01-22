@@ -51,9 +51,9 @@ class Message {
         const msg = {
             i: 1,
             f: 3,
+            l: 'error'
             m: {
-                data,
-                name: 'error',
+                vars: data,
                 id: errorId
             }
         }

@@ -39,7 +39,7 @@ const DEFAULT_CONFIG = {
     },
 
     chan: {
-        public: [{
+        start: [{
             name: 'home',
             userMin: 0,
             userMax: Infinity,
@@ -108,11 +108,8 @@ class Server {
     
     _initChans()
     {
-        const chanConfigPublic = this._config.chan.public
-        for (let i = 0, l = chanConfigPublic.length; i < l; i++)
+        for (const options of this._config.chan.start)
         {
-            const options = chanConfigPublic[i]
-            
             // todo create a user for server to replace null
             this._addChan(null, options.name, options)
         }

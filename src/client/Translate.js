@@ -128,14 +128,14 @@ const MESSAGE_LIST = {
           fr: '$1 a rejoind le salon $2'}
 }
 
-class ErrorCode {
+class Translate {
     
     constructor( lang )
     {
         this.lang = lang
     }
     
-    translate( id, ...data )
+    get( id, ...datas )
     {
         const lang = this.lang
         
@@ -145,13 +145,46 @@ class ErrorCode {
 	}
         
         let raw = MESSAGE_LIST[id][lang]
-	let i = data.length;
+	let i = datas.length;
 	while (--i > -1)
         {
-            raw = raw.replace('$' + (i + 1), data[i]);
+            raw = raw.replace('$' + (i + 1), datas[i])
 	}
 	
 	return raw
+    }
+    
+    /**
+     * Add a new message for the code. Example:
+     * 
+     * const message1 = {
+     *  en: 'You are to young to connect here',
+     *  fr: 'Tu es trop jeune pour te connecter ici'
+     * }
+     * add( 1001, message1 }
+     * 
+     * const message2 = {
+     *  en: 'You are killed by $1 assisted by $2',
+     *  fr: 'Tu as été tué par $1 assisté de $2'
+     * }
+     * add( 1002, message2 }
+     * 
+     * 
+     * 
+     * @param {Integer} code        Code message
+     * @param {Object} messages     Object contain messages by language
+     * @returns {undefined}
+     */
+    add( code, messages )
+    {
+        if (MESSAGE_LIST[code] != null)
+        {
+            console.warn(`The error code ${code} already exist`)
+        }
+        else
+        {
+            MESSAGE_LIST[code] = messages
+        }
     }
 }
 
