@@ -115,7 +115,7 @@ class Client {
             }
             else if (label === 'error')
             {
-                this.onServerMsg(this.translate.get(msg.id, ...msg.vars)
+                this.onServerMsg(this.translate.get(msg.id, ...msg.vars))
             }
             else
             {

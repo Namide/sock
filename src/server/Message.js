@@ -22,18 +22,6 @@
  * THE SOFTWARE.
  */
 
-const CONTENT_TYPE = {
-    EVENT: 1, 
-    DATA: 2, 
-    LIST: 3 
-}
-
-const ITEM_TYPE = {
-    USER: 1, 
-    CHAN: 2, 
-    SERVER: 3 
-}
-
 class Message {
     
     constructor()
@@ -51,7 +39,7 @@ class Message {
         const msg = {
             i: 1,
             f: 3,
-            l: 'error'
+            l: 'error',
             m: {
                 vars: data,
                 id: errorId
@@ -107,5 +95,4 @@ class Message {
     }
 }
 
-export { CONTENT_TYPE, ITEM_TYPE }
 export default Message

@@ -26,45 +26,9 @@ import User from './User.js'
 import Chan from './Chan.js'
 import Connect from './Connect.js'
 import Parser from './Parser.js'
-import Message, {CONTENT_TYPE, ITEM_TYPE} from './Message.js'
+import Message from './Message.js'
+import DEFAULT_CONFIG from './config.js'
 
-const DEFAULT_CONFIG = {
-
-    debug: true,
-    
-    connect: {
-        host: '0.0.0.0',
-        path: '/chat',
-        port: 8000
-    },
-
-    chan: {
-        start: [{
-            name: 'home',
-            userMin: 0,
-            userMax: Infinity,
-            modEnabled: false
-        }],
-        default: {
-            userMin: 1,
-            userMax: 100,
-            modEnabled: true
-        },
-        valid: {
-            name: name =>  name.match(/^[_A-Za-z0-9-]{3,10}$/)
-        }
-    },
-
-    user: {
-        default: {
-            name: 'guest',
-            role: 0
-        },
-        valid: {
-            name: name =>  name.match(/^[_A-Za-z0-9-]{3,10}$/)
-        }
-    }
-}
 
 class Server {
     
@@ -75,10 +39,10 @@ class Server {
         this.subscribers = []
         
         this.cache = {
-            userName = {},
-            userId = {},
-            chanName = {},
-            chanId = {}
+            userName: {},
+            userId: {},
+            chanName: {},
+            chanId: {}
         }
         
         this._config = Object.assign({}, DEFAULT_CONFIG, config)

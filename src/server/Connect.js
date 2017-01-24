@@ -37,6 +37,8 @@ export default class Connect {
             host: config.host,
             path: config.path
         }
+        
+        this.add = this.add.bind(this)
     }
     
     start()
@@ -47,8 +49,17 @@ export default class Connect {
         // this.onLog(`Sock initialized: ${options.host}${options.path}: ${options.port}`)
         
         // Listen the new connections
-        wss.on('connection', this.add.bind(this))
+        wss.on('connection', this.add)
         // this.onLog(`Sock listen connections`)
+    }
+    
+    close()
+    {
+        if (this._wss)
+        {
+            this._wss.off('connection', this.add)
+            this._wss.close()
+        }
     }
     
     add( socket )
