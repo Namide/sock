@@ -26,6 +26,13 @@ THE SOFTWARE.
     <head>
         <title>Test</title>
         <meta charset="utf-8">
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                background: #333;
+                color: #BBB;
+            }
+        </style>
     </head>
     <body>
         
@@ -36,6 +43,7 @@ THE SOFTWARE.
         <script language="javascript" type="text/javascript">
             
             var $el;
+            var sock;
             
             function onLog( msg )
             {
@@ -44,16 +52,56 @@ THE SOFTWARE.
             
             function onError( msg )
             {
-                $el.append('<span style="color:red">' + msg + '</span>');
+                $el.append('<span style="color:red">' + msg + '</span><br>');
             }
+            
+            // Sock events
+            function subscribe( sock )
+            {
+                sock.onLog = onLog;
+                // sock.onClose = msg => { this.onLog('Socket closed') }
+                // sock.onMsgUser = (name, msg) => { this.onLog(name + ":" + msg) }
+                // sock.onChanMsg = (name, msg) => { this.onLog(name + ":" + msg) }
+                sock.onServerMsg = function( msg ) { sock.onLog('Server message: ' + msg) };
+                sock.onListChan = function( list ) { sock.onLog('List chan: ' + list.toString()) };
+                sock.onUserEvt = function( user, label, data ) { sock.onLog('User Event: ' + label + ', ' + objToStr(data)) };
+                sock.onChanEvt = function( label, data ) { sock.onLog('Chan Event: ' + label + ', ' + objToStr(data)) };
+                sock.onServerEvt = function( label, data ) { sock.onLog('Server Event: ' + label + ', ' + objToStr(data)) };
+                sock.onChanChange = function( chan ) { sock.onLog('Chan changed: ' + objToStr(chan)) };
+                sock.onChanDataChange = function( data ) { sock.onLog('Chan data changed:' + objToStr(data)) };
+                sock.onChanUserList = function( list ) { sock.onLog('Chan user list: ' + list.toString()) };
+            }
+            
+            // Helper
+            function objToStr( obj )
+            {
+                if (typeof obj === 'object')
+                {
+                    var str = '{';
+                    for (var key in obj)
+                    {
+                        str += key + ': ' + objToStr(obj[key]) + ', ';
+                    }
+                    if (str.length > 1)
+                    {
+                        str = str.substring(0, str.length - 2);
+                    }
+                    return str + '}';
+                }
+                else
+                {
+                    return obj
+                }
+            }
+            
             
             // DOM dependant functions
             $(function () {
             
                 $el = $('#app');
-                var sock = new window.sock('ws://127.0.0.1:8080/test', onLog, onError);
-                sock.onLog = onLog;
                 
+                sock = new window.sock('ws://127.0.0.1:8080/test', onLog, onError);
+                subscribe( sock )
             })
 
         </script>
