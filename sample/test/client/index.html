@@ -35,10 +35,24 @@ THE SOFTWARE.
         <script type="text/javascript" src="../../../build/sock.js"></script>
         <script language="javascript" type="text/javascript">
             
+            var $el;
+            
+            function onLog( msg )
+            {
+                $el.append(msg + "<br>");
+            }
+            
+            function onError( msg )
+            {
+                $el.append('<span style="color:red">' + msg + '</span>');
+            }
+            
             // DOM dependant functions
             $(function () {
-
-                var $el = $('#app');
+            
+                $el = $('#app');
+                var sock = new window.sock('ws://127.0.0.1:8080/test', onLog, onError);
+                sock.onLog = onLog;
                 
             })
 

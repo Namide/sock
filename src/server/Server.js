@@ -96,10 +96,10 @@ class Server {
         // this._onDebug('connected', user)
         
 	// Inform user of his datas
-        this._sendData(user, user.data, user)
+        this._message.sendData(user, user.data, user)
         
         // Join the default chan
-        this._changeChan(user, this.chans[0], '')
+        this.changeChan(user, this.chans[0], '')
     }
     
     
@@ -174,7 +174,7 @@ class Server {
             chan.onEmpty = this._rmChan.bind(this, chan)
             chan.onNewMod = (user) => {
                 // inform all the channel that this user is now moderator
-                this._message.sendData(user, {role: user.getRole()}, chan.users)
+                this._message.sendData(user, {role: user.getRole()}, ...chan.users)
             }
             
             this.chans.push(chan)
@@ -197,7 +197,7 @@ class Server {
     {
         chan.rm(user)
         // Send the chan change to old chan
-        this._message.sendData(user, {chan: {id: -2}}, chan.users)
+        this._message.sendData(user, {chan: {id: -2}}, ...chan.users)
     }
     
     _joinChan( user, chan, pass = '' )
@@ -208,7 +208,7 @@ class Server {
         this._message.sendData(chan, chan.data, user)
         
         // send to all users in the chan the new user data
-        this._message.sendData(user, user.data, chan.users)
+        this._message.sendData(user, user.data, ...chan.users)
     }
     
     

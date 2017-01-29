@@ -48,6 +48,8 @@ export default class Connect {
         this._wss = wss
         // this.onLog(`Sock initialized: ${options.host}${options.path}: ${options.port}`)
         
+        console.log(`Sock initialized: ${options.host}${options.path}: ${options.port}`)
+        
         // Listen the new connections
         wss.on('connection', this.add)
         // this.onLog(`Sock listen connections`)

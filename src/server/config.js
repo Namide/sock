@@ -24,8 +24,6 @@
 
 export default {
 
-    debug: true,
-    
     connect: {
         host: '0.0.0.0',
         path: '/chat',

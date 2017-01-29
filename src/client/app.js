@@ -24,5 +24,4 @@
 
 import Client from './client.js'
 
-const client = new Client()
-window.sock = client
+window.sock = Client

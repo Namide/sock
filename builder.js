@@ -9,7 +9,7 @@ function onError(err)
 }
 
 /*
- * Task to build the es5 minified client file ./build/sock.js
+ * Task to build the production client file ./build/sock.min.js
  */
 browserify({ debug: false, comment: false })
   .transform(babelify, {presets: ["es2015"]})
@@ -17,4 +17,15 @@ browserify({ debug: false, comment: false })
   .require("./src/client/app.js", { entry: true })
   .bundle()
   .on("error", onError)
+  .pipe(fs.createWriteStream("./build/sock.min.js"));
+
+/*
+ * Task to build the development client file ./build/sock.js
+ */
+browserify({ debug: true, comment: true })
+  .transform(babelify, {presets: ["es2015"]})
+  .require("./src/client/app.js", { entry: true })
+  .bundle()
+  .on("error", onError)
   .pipe(fs.createWriteStream("./build/sock.js"));
+ 

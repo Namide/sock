@@ -4,7 +4,8 @@
   "description": "Node websocket server and client for mini-games and chat",
   "main": "src/server/app.js",
   "scripts": {
-    "start-chat-server": "node sample/chat/server/app.js",
+    "start-chat-server": "node ./sample/chat/server/app.js",
+    "start-test-server": "node ./sample/test/server/app.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "node builder.js"
   },

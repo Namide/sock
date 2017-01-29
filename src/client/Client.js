@@ -34,14 +34,14 @@ class Client {
     {
         this.users = [] // all, me too
 
-        this.me
-	this.chan
+        this.me = null
+	this.chan = null
 
 	this.uri = URI
 	this.translate = new Translate(lang)
 	
 	this.listChans = []
-        this.websocket
+        this.websocket = null
         
 	this._initDispatcher(onConnected, onError)
         this._initWebsocket()
@@ -54,17 +54,17 @@ class Client {
 	this.onError = onError || (msg => { console.error(msg) })
         
         this.onLog = msg => { console.log(msg) }
-	this.onClose = msg => { this.onLog('Socket closed') }
-	this.onMsgUser = (name, msg) => { this.onLog(name + ":" + msg) }
-	this.onChanMsg = (name, msg) => { this.onLog(name + ":" + msg) }
-	this.onServerMsg = msg => { this.onLog(msg) }
-	this.onListChan = list => { this.onLog(list) }
-	this.onUserEvt = (user, label, data) => { this.onLog(label) }
-	this.onChanEvt = (label, data) => { this.onLog(label) }
-	this.onServerEvt = (label, data) => { this.onLog(label) }
-	this.onChanChange = chan => { this.onLog('Chan changed') }
-	this.onChanDataChange = data => { this.onLog('data changed') }
-	this.onChanUserList = list => { this.onLog(list) }
+        this.onClose = msg => { this.onLog('Socket closed') }
+        this.onMsgUser = (name, msg) => { this.onLog(name + ":" + msg) }
+        this.onChanMsg = (name, msg) => { this.onLog(name + ":" + msg) }
+        this.onServerMsg = msg => { this.onLog(msg) }
+        this.onListChan = list => { this.onLog(list) }
+        this.onUserEvt = (user, label, data) => { this.onLog(label) }
+        this.onChanEvt = (label, data) => { this.onLog(label) }
+        this.onServerEvt = (label, data) => { this.onLog(label) }
+        this.onChanChange = chan => { this.onLog('Chan changed') }
+        this.onChanDataChange = data => { this.onLog('data changed') }
+        this.onChanUserList = list => { this.onLog(list) }
     }
     
     _initParser()
@@ -81,7 +81,7 @@ class Client {
         
         // EVENTS
 
-        this.parser.onUserEvent = (userTargetId, label, msg) => {
+        this.parser.onUserEvent = ( userTargetId, label, msg ) => {
             
             const user = this.getUserById( userTargetId )
             if (label === 'msg')
@@ -94,7 +94,7 @@ class Client {
             }
         }
         
-        this.parser.onChanEvent = (userTargetId, label, msg) => {
+        this.parser.onChanEvent = ( userTargetId, label, msg ) => {
             
             const user = this.getUserById( userTargetId )
             if (label === 'msg')
@@ -175,7 +175,7 @@ class Client {
         // DATAS
         this.parser.onChanData = (chanTargetId, msg) => {
             msg.id = chanTargetId
-            this._setChanData(d);
+            this._setChanData(msg)
         }
         
         this.parser.onUserData = (userTargetId, msg) => {
@@ -195,13 +195,16 @@ class Client {
             this.websocket = new WebSocket(this.uri)
             this.websocket.onclose = evt => { this.onClose(evt.data) }
             this.websocket.onmessage = evt => { this.parser.check(evt.data) }
-            this.websocket.onerror = evt => { this.onError(mpgClient.trad.get(5)) }
+            this.websocket.onerror = evt => {
+                this.onError(this.translate.get(5))
+            }
 
-            window.addEventListener('beforeunload', (e) => { this.close() }, false)
+            window.addEventListener('beforeunload', evt => { this.close() }, false)
 	}
         catch (e)
         {
-            this.onError(this.trad.get(0))
+            this.onError(this.translate.get(0))
+            console.error(e.message)
 	}
     }
     
@@ -480,7 +483,7 @@ class Client {
     {
         if (this.onChanUserList)
         {
-            this.onChanUserList(this.getChanUserList())
+            this.onChanUserList(this.chan.users)
         }
     }
 
@@ -600,13 +603,13 @@ class Client {
     _setChanData( data )
     {
         let newChan = false
-        if (this.chan || this.chan.data.id !== data.id)
+        if (this.chan == null || this.chan.data.id !== data.id)
         {
             this.chan = new Chan(data.id)
             newChan = true
         }
 
-        for (key in data)
+        for (const key in data)
         {
             this.chan.data[key] = data[key]
         }

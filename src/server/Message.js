@@ -37,8 +37,8 @@ class Message {
         }
         
         const msg = {
-            i: 1,
-            f: 3,
+            y: 1,
+            t: 3,
             l: 'error',
             m: {
                 vars: data,
@@ -58,9 +58,9 @@ class Message {
     sendData( item, data, ...to )
     {
         const msg = {
-            i: 2,   // 2 = data
-            f: item.type,
-            m: Object.assign( {id: from.data.id}, data )
+            y: 2,   // 2 = data
+            t: item.type,
+            m: Object.assign( {id: item.data.id}, data )
         }
         
         this._send(msg, ...to)
@@ -75,22 +75,21 @@ class Message {
     sendList( itemType, list, ...to )
     {
         const msg = {
-            i: 3,   // 3 = list
-            f: itemType,
+            y: 3,   // 3 = list
+            t: itemType,
             m: list
         }
 	
 	this._send(msg, ...to);
     }
     
-    _send( msg, ...user )
+    _send( msg, ...users )
     {
 	const str = JSON.stringify(msg)
         
-        let i = user.length
-        while (--i > -1)
+        for(const user of users)
         {
-            user[i].sendMsg(str)
+            user.sendMsg(str)
         }
     }
 }

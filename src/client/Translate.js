@@ -188,4 +188,4 @@ class Translate {
     }
 }
 
-export default ErrorCode
+export default Translate

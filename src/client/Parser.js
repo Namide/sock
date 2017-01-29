@@ -52,9 +52,10 @@ class Parser {
             const msg = JSON.parse(data)
             this._checkMsg(msg)
 	}
-        catch(e)
+        catch( evt )
         {
             this.onError(2)
+            console.error(evt, data)
         }
     }
     
@@ -137,10 +138,10 @@ class Parser {
     
     _checkMsg( data )
     {
-        const { type: i, from: f, label: l, target: t, msg: m } = data
+        const { y: type, l: label, t: target, m: msg } = data
         
         // Get target type
-       const { targetType: type, targetId: id } = this._getTypeIdByData(from)
+        const { type: targetType, id: targetId } = this._getTypeIdByData(target)
         
         
         if (!Number.isInteger(type) || !Number.isInteger(targetType))
