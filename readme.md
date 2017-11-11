@@ -7,7 +7,6 @@ Lightweight JavaScript library (server/client) for multiplayer mini games and ch
 - TCP: Websockets
 - Server Dependencies: NodeJS>=6.9.0, WS
 - Client Dependencies: none
-- Example: [chat](http://namide.com/chat) (jQuery)
 
 
 ## Get started

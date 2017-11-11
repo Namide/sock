@@ -62,20 +62,33 @@ THE SOFTWARE.
                 // sock.onClose = msg => { this.onLog('Socket closed') }
                 // sock.onMsgUser = (name, msg) => { this.onLog(name + ":" + msg) }
                 // sock.onChanMsg = (name, msg) => { this.onLog(name + ":" + msg) }
-                sock.onServerMsg = function( msg ) { sock.onLog('Server message: ' + msg) };
-                sock.onListChan = function( list ) { sock.onLog('List chan: ' + list.toString()) };
+                sock.onServerMsg = function( msg ) { sock.onLog('Server message: ' + objToStr(msg)) };
+                sock.onListChan = function( list ) { sock.onLog('List chan: ' + objToStr(list)) };
                 sock.onUserEvt = function( user, label, data ) { sock.onLog('User Event: ' + label + ', ' + objToStr(data)) };
                 sock.onChanEvt = function( label, data ) { sock.onLog('Chan Event: ' + label + ', ' + objToStr(data)) };
                 sock.onServerEvt = function( label, data ) { sock.onLog('Server Event: ' + label + ', ' + objToStr(data)) };
                 sock.onChanChange = function( chan ) { sock.onLog('Chan changed: ' + objToStr(chan)) };
                 sock.onChanDataChange = function( data ) { sock.onLog('Chan data changed:' + objToStr(data)) };
-                sock.onChanUserList = function( list ) { sock.onLog('Chan user list: ' + list.toString()) };
+                sock.onChanUserList = function( list ) { sock.onLog('Chan user list: ' + objToStr(list)) };
             }
             
             // Helper
             function objToStr( obj )
             {
-                if (typeof obj === 'object')
+                if (Array.isArray(obj))
+                {
+                    var str = '[';
+                    for (var i = 0; i < obj.length; i++)
+                    {
+                        str += objToStr(obj[key]) + ', ';
+                    }
+                    if (str.length > 1)
+                    {
+                        str = str.substring(0, str.length - 2);
+                    }
+                    return str + ']';
+                }
+                else if (typeof obj === 'object')
                 {
                     var str = '{';
                     for (var key in obj)
