@@ -1,70 +1,45 @@
-/* 
- * The MIT License
- *
- * Copyright 2017 Damien Doussaud (namide.com).
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- */
-
 import Chan from './Chan.js'
 import User from './User.js'
 import Translate from './Translate.js'
 import Parser from './Parser.js'
 
 
-class Client {
-    
+class Client
+{
     constructor( URI, onConnected = null, onError = null, lang = 'en' )
     {
         this.users = [] // all, me too
 
         this.me = null
-	this.chan = null
+        this.chan = null
 
-	this.uri = URI
-	this.translate = new Translate(lang)
-	
-	this.listChans = []
+        this.uri = URI
+        this.translate = new Translate(lang)
+
+        this.listChans = []
         this.websocket = null
-        
-	this._initDispatcher(onConnected, onError)
+
+        this._initDispatcher(onConnected, onError)
         this._initWebsocket()
         this._initParser()
     }
     
     _initDispatcher( onConnected, onError )
     {
-	this.onConnected = onConnected || (user => { this.onLog('User connected') })
-	this.onError = onError || (msg => { console.error(msg) })
+        this.onConnected = onConnected || (user => { console.log('User connected') })
+        this.onError = onError || (msg => { console.error(msg) })
         
-        this.onLog = msg => { console.log(msg) }
-        this.onClose = msg => { this.onLog('Socket closed') }
-        this.onMsgUser = (name, msg) => { this.onLog(name + ":" + msg) }
-        this.onChanMsg = (name, msg) => { this.onLog(name + ":" + msg) }
-        this.onServerMsg = msg => { this.onLog(msg) }
-        this.onListChan = list => { this.onLog(list) }
-        this.onUserEvt = (user, label, data) => { this.onLog(label) }
-        this.onChanEvt = (label, data) => { this.onLog(label) }
-        this.onServerEvt = (label, data) => { this.onLog(label) }
-        this.onChanChange = chan => { this.onLog('Chan changed') }
-        this.onChanDataChange = data => { this.onLog('data changed') }
-        this.onChanUserList = list => { this.onLog(list) }
+        this.onClose = msg => { console.log('Socket closed') }
+        this.onMsgUser = (name, msg) => { console.log(name + ":" + msg) }
+        this.onChanMsg = (name, msg) => { console.log(name + ":" + msg) }
+        this.onServerMsg = msg => { console.log(msg) }
+        this.onListChan = list => { console.log(list) }
+        this.onUserEvt = (user, label, data) => { console.log(label) }
+        this.onChanEvt = (label, data) => { console.log(label) }
+        this.onServerEvt = (label, data) => { console.log(label) }
+        this.onChanChange = chan => { console.log('Chan changed') }
+        this.onChanDataChange = data => { console.log('data changed') }
+        this.onChanUserList = list => { console.log(list) }
     }
     
     _initParser()

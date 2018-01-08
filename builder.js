@@ -1,7 +1,6 @@
-
-var fs = require("fs");
-var browserify = require("browserify");
-var babelify = require("babelify");
+const fs = require("fs");
+const browserify = require("browserify");
+const babelify = require("babelify");
 
 function onError(err)
 {
@@ -28,4 +27,3 @@ browserify({ debug: true, comment: true })
   .bundle()
   .on("error", onError)
   .pipe(fs.createWriteStream("./build/sock.js"));
- 
