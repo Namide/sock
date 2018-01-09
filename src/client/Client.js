@@ -4,7 +4,7 @@ import Translate from './Translate.js'
 import Parser from './Parser.js'
 
 
-class Client
+export default class Client
 {
     constructor( URI, onConnected = null, onError = null, lang = 'en' )
     {
@@ -599,5 +599,3 @@ class Client
         }
     }  
 }
-
-export default Client

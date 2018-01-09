@@ -1,4 +1,5 @@
 export default {
+
     connect: {
         host: '0.0.0.0',
         path: '/chat',
